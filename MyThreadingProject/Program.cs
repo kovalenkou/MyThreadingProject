@@ -10,26 +10,46 @@ namespace MyThreadingProject
 {
     class Test
     {
-        public bool? Next()
+        public static void Next(object num)
         {
+            int n = (int)num;
+            Console.WriteLine("Поток № {0} запущен", n);
+            //Thread.Sleep(1000);
             int res = 0;
-            Thread.Sleep(200);
-            res = new Random().Next(0, 3);
-            switch (res)
+            bool? flag;
+            Queue<bool?> q = new Queue<bool?>();
+            do
             {
-                case 0:
-                    return false;
-                    //break;
-                case 1:
-                    return true;
-                    //break;
-                case 2:
-                    return null;
-                default:
-                    break;
-            }
-            return null;
-
+                res = new Random().Next(0, 500);
+                res %= 11;
+                switch (res)
+                {
+                    case 1:
+                        {
+                            flag = false;
+                            break;
+                        }
+                    case 3:
+                        {
+                            flag = true;
+                            break;
+                        }
+                    default:
+                        {
+                            flag = null;
+                            break;
+                        }
+                }
+                if (flag != null)
+                {
+                    q.Enqueue(flag);
+                }
+            } while (flag != null);
+            Console.WriteLine("++++++++++++++");
+            foreach (bool? f in q)
+                Console.WriteLine(f);
+            Console.WriteLine("---------------");
+            Console.WriteLine("Завершен поток № {0}", n);
         }
     }
     
@@ -37,27 +57,20 @@ namespace MyThreadingProject
     {
         static void Main(string[] args)
         {
-            bool? flag;
-            Queue<bool?> q = new Queue<bool?>();
-            do
+            for (int i = 0; i < 5; i++)
             {
-                Thread t1 = new Thread(() => Console.WriteLine("Hello"));
-                t1.Start();
-                Thread t2 = new Thread(() => Console.WriteLine(new Test().Next()));
-                t2.Start();
-                flag = new Test().Next();
-                //Thread t3 = new Thread();
-                //Thread t4 = new Thread();
-
-                Console.WriteLine(flag);
-
-            } while (flag != null);
-            if (flag != null)
-            {
-                q.Enqueue(flag);
+                try
+                {
+                    Thread t = new Thread(Test.Next);
+                    t.Start(i as object);
+                    //Thread t = new Thread(() => Test.Next(i));
+                    //t.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
-            foreach (bool? f in q)
-                Console.WriteLine(f);
 
         }
     }
